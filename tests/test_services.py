@@ -1,9 +1,9 @@
 import pytest
-from services import is_duplicate_submission, validate_lead_data, save_lead, send_notification_email, get_leads
-from schemas import LeadCreate, Lead
+from backend.services import is_duplicate_submission, validate_lead_data, save_lead, send_notification_email, get_leads
+from backend.schemas import LeadCreate, Lead
 from datetime import datetime, timedelta
 import json
-from unittest.mock import patch, AsyncMock, ANY
+from unittest.mock import patch, AsyncMock
 import asyncio
 
 def test_is_duplicate_submission_no_file(mock_aiofiles_open):

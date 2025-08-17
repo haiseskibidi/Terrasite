@@ -1,9 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
-from main import app
-from config import config
+from backend.main import app
+from backend.config import config
 import os
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock
 
 @pytest.fixture(scope="session")
 def test_app():

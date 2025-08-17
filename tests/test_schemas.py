@@ -1,5 +1,5 @@
 import pytest
-from schemas import LeadBase, LeadCreate, Lead
+from backend.schemas import LeadBase, LeadCreate, Lead
 from pydantic import ValidationError
 from datetime import datetime
 

@@ -1,5 +1,5 @@
 import pytest
-from config import Config, config
+from backend.config import Config
 from pydantic import ValidationError
 
 def test_config_defaults():

@@ -1,11 +1,8 @@
-import pytest
-from fastapi import status, HTTPException
+from fastapi import HTTPException
 from unittest.mock import patch, AsyncMock
-from routers import router
-from schemas import LeadCreate, Lead
+from backend.schemas import Lead
 from datetime import datetime
-from config import logging
-import asyncio
+
 
 def test_submit_form_valid(client):
     data = {
