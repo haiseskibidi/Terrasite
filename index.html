@@ -117,7 +117,9 @@
                             <h3>В чем заключается суть вашего проекта?</h3>
                             <p class="step-subtitle">Описание обязательно для заполнения</p>
                             
+                            <label for="description" class="form-label">Описание проекта</label>
                             <textarea 
+                                id="description"
                                 name="description" 
                                 placeholder="Опишите свой проект (минимум 50 символов)"
                                 rows="6"
@@ -204,11 +206,22 @@
                             </div>
 
                             <div class="contact-fields">
-                                <input type="text" name="name" placeholder="Ваше имя" required>
+                                <label for="name" class="form-label">Ваше имя</label>
+                                <input type="text" id="name" name="name" placeholder="Ваше имя" required>
+                                
+                                <label for="whatsapp-field" class="form-label contact-field-label" id="whatsapp-label" style="display: none;">Номер WhatsApp</label>
                                 <input type="tel" name="phone" placeholder="Ваш номер WhatsApp" id="whatsapp-field" style="display: none;">
+                                
+                                <label for="telegram-field" class="form-label contact-field-label" id="telegram-label" style="display: none;">Telegram</label>
                                 <input type="text" name="telegram" placeholder="Telegram (@username)" id="telegram-field" style="display: none;">
+                                
+                                <label for="phone-number-field" class="form-label contact-field-label" id="phone-label" style="display: none;">Номер телефона</label>
                                 <input type="tel" name="phone_number" placeholder="Ваш номер телефона" id="phone-number-field" style="display: none;">
+                                
+                                <label for="call-time-field" class="form-label contact-field-label" id="time-label" style="display: none;">Время для звонка</label>
                                 <input type="text" name="call_time" placeholder="Время для звонка (МСК)" id="call-time-field" style="display: none;">
+                                
+                                <label for="email-field" class="form-label contact-field-label" id="email-label" style="display: none;">Email</label>
                                 <input type="email" name="email" placeholder="Ваш email" id="email-field" style="display: none;">
                             </div>
 

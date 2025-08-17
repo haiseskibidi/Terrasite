@@ -536,6 +536,24 @@ body {
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
+/* Метки полей */
+.form-label {
+    display: block;
+    color: #e2e8f0;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    margin-top: 16px;
+}
+
+.form-label:first-child {
+    margin-top: 0;
+}
+
+.contact-field-label {
+    margin-top: 24px;
+}
+
 textarea, input[type="text"], input[type="email"], input[type="tel"] {
     width: 100%;
     padding: 16px;

@@ -530,30 +530,46 @@ function updateContactField() {
     const callTimeField = document.getElementById('call-time-field');
     const emailField = document.getElementById('email-field');
     
+    // Получаем label элементы
+    const whatsappLabel = document.getElementById('whatsapp-label');
+    const telegramLabel = document.getElementById('telegram-label');
+    const phoneLabel = document.getElementById('phone-label');
+    const timeLabel = document.getElementById('time-label');
+    const emailLabel = document.getElementById('email-label');
+    
     if (!selectedMethod) return;
     
+    // Скрываем все поля и их метки
     [whatsappField, telegramField, phoneNumberField, callTimeField, emailField].forEach(field => {
         field.style.display = 'none';
         field.required = false;
+    });
+    [whatsappLabel, telegramLabel, phoneLabel, timeLabel, emailLabel].forEach(label => {
+        label.style.display = 'none';
     });
     
     switch(selectedMethod.value) {
         case 'whatsapp':
             whatsappField.style.display = 'block';
+            whatsappLabel.style.display = 'block';
             whatsappField.required = true;
             break;
         case 'telegram':
             telegramField.style.display = 'block';
+            telegramLabel.style.display = 'block';
             telegramField.required = true;
             break;
         case 'phone':
             phoneNumberField.style.display = 'block';
             callTimeField.style.display = 'block';
+            phoneLabel.style.display = 'block';
+            timeLabel.style.display = 'block';
             phoneNumberField.required = true;
             callTimeField.required = true;
             break;
         case 'email':
             emailField.style.display = 'block';
+            emailLabel.style.display = 'block';
             emailField.required = true;
             break;
     }
