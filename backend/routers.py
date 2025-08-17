@@ -1,33 +1,26 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from backend.schemas import LeadCreate, Lead
-from backend.services import (
-    is_duplicate_submission,
-    validate_lead_data,
-    save_lead,
-    send_notification_email,
-    get_leads
-)
+from backend.services import LeadService
 from typing import List, Dict
 from datetime import datetime
 from backend.config import logging
+from fastapi import status
 
 router: APIRouter = APIRouter()
 
 
+async def get_lead_service() -> LeadService:
+    return LeadService()
+
+
 @router.post("/submit-form", response_model=Dict[str, str | bool])
-async def submit_form(lead_data: LeadCreate) -> Dict[str, str | bool]:
+async def submit_form(
+    lead_data: LeadCreate,
+    lead_service: LeadService = Depends(get_lead_service)
+) -> Dict[str, str | bool]:
     try:
         logging.info(f"Получены данные формы: {lead_data.model_dump()}")
-        await validate_lead_data(lead_data)
-
-        if await is_duplicate_submission(lead_data):
-            raise HTTPException(
-                status_code=400,
-                detail="Заявка с такими контактными данными уже была отправлена недавно"
-            )
-
-        lead: Lead = await save_lead(lead_data)
-        await send_notification_email(lead)
+        lead = await lead_service.process_lead(lead_data)
 
         contact_info: str = ""
         if lead_data.contact_method == 'whatsapp':
@@ -47,14 +40,16 @@ async def submit_form(lead_data: LeadCreate) -> Dict[str, str | bool]:
     except Exception as e:
         logging.error(f"Ошибка обработки заявки: {e}")
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"success": False, "error": "Внутренняя ошибка сервера"}
         )
 
 
 @router.get("/admin/leads", response_model=List[Lead])
-async def admin_leads() -> List[Lead]:
-    return await get_leads()
+async def admin_leads(
+    lead_service: LeadService = Depends(get_lead_service)
+) -> List[Lead]:
+    return await lead_service.get_all_leads()
 
 
 @router.get("/health", response_model=Dict[str, str])
