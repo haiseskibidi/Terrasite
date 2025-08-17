@@ -1,25 +1,25 @@
 import pytest
-from backend.config import config
+from backend.config import config, Settings
 from pydantic import ValidationError
 
 def test_config_defaults():
-    cfg = config()
-    assert cfg.SMTP_HOST == 'smtp.yandex.ru'
-    assert cfg.SMTP_PORT == 465
-    assert cfg.SMTP_USER == 'team.terrasite@yandex.ru'
-    assert cfg.SMTP_PASSWORD == 'lncsiaezbmfjaltp'
-    assert cfg.FROM_EMAIL == 'team.terrasite@yandex.ru'
-    assert cfg.TO_EMAIL == 'team.terrasite@yandex.ru'
-    assert cfg.LEADS_FILE == 'leads.json'
+    cfg = Settings()
+    assert cfg.smtp_host == 'smtp.yandex.ru'
+    assert cfg.smtp_port == 465
+    assert cfg.smtp_user == 'team.terrasite@yandex.ru'
+    assert cfg.smtp_password == 'lncsiaezbmfjaltp'
+    assert cfg.from_email == 'team.terrasite@yandex.ru'
+    assert cfg.to_email == 'team.terrasite@yandex.ru'
+    assert 'leads.json' in str(cfg.leads_file)
 
 def test_config_with_env(monkeypatch):
     monkeypatch.setenv("APP_SMTP_HOST", "test.host")
     monkeypatch.setenv("APP_SMTP_PORT", "587")
-    cfg = config()
-    assert cfg.SMTP_HOST == "test.host"
-    assert cfg.SMTP_PORT == 587
+    cfg = Settings()
+    assert cfg.smtp_host == "test.host"
+    assert cfg.smtp_port == 587
 
 def test_config_validation_error(monkeypatch):
     monkeypatch.setenv("APP_SMTP_PORT", "invalid")
     with pytest.raises(ValidationError):
-        config()
+        Settings()

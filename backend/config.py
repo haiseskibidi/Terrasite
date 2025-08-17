@@ -2,7 +2,7 @@ from pathlib import Path
 import logging
 from typing import Optional
 from pydantic_settings import BaseSettings
-from pydantic import Field, EmailStr
+from pydantic import Field, EmailStr, ConfigDict
 
 BASE_DIR: Path = Path(__file__).parent
 
@@ -17,11 +17,13 @@ class Settings(BaseSettings):
     leads_file: Path = Field(default=BASE_DIR / "data" / "leads.json", alias='LEADS_FILE', description="Path to leads JSON file")
     log_file: Path = Field(default=BASE_DIR / "data" / "app.log", alias='LOG_FILE', description="Path to log file")
 
-    class Config:
-        env_prefix: str = 'APP_'
-        case_sensitive: bool = False
-        env_file: Optional[str] = '.env'
-        env_file_encoding: str = 'utf-8'
+    model_config = ConfigDict(
+        env_prefix='APP_',
+        case_sensitive=False,
+        env_file='.env',
+        env_file_encoding='utf-8',
+        extra='ignore'
+    )
 
 
 config: Settings = Settings()
