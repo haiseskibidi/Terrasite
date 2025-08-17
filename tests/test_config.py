@@ -1,16 +1,17 @@
 import pytest
-from backend.config import config, Settings
 from pydantic import ValidationError
+from backend.config import Settings
 
 def test_config_defaults():
     cfg = Settings()
-    assert cfg.smtp_host == 'smtp.yandex.ru'
+    assert cfg.smtp_host == "smtp.yandex.ru"
     assert cfg.smtp_port == 465
-    assert cfg.smtp_user == 'team.terrasite@yandex.ru'
-    assert cfg.smtp_password == 'lncsiaezbmfjaltp'
-    assert cfg.from_email == 'team.terrasite@yandex.ru'
-    assert cfg.to_email == 'team.terrasite@yandex.ru'
-    assert 'leads.json' in str(cfg.leads_file)
+    assert cfg.smtp_user == "team.terrasite@yandex.ru"
+    assert cfg.smtp_password == "lncsiaezbmfjaltp"
+    assert cfg.from_email == "team.terrasite@yandex.ru"
+    assert cfg.to_email == "team.terrasite@yandex.ru"
+    assert cfg.leads_file.name == "leads.json"
+    assert cfg.log_file.name == "app.log"
 
 def test_config_with_env(monkeypatch):
     monkeypatch.setenv("APP_SMTP_HOST", "test.host")

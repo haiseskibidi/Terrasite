@@ -28,6 +28,8 @@ async def mock_aiofiles_open(monkeypatch):
     mock_context = AsyncMock()
     mock_context.__aenter__.return_value = mock_context
     mock_context.__aexit__.return_value = None
+    mock_context.read = AsyncMock()
+    mock_context.write = AsyncMock()
     mock_open.return_value = mock_context
     monkeypatch.setattr("aiofiles.open", mock_open)
     return mock_open

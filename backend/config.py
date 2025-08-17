@@ -6,10 +6,9 @@ from pydantic import Field, EmailStr, ConfigDict
 
 BASE_DIR: Path = Path(__file__).parent
 
-
 class Settings(BaseSettings):
     smtp_host: str = Field(default='smtp.yandex.ru', alias='SMTP_HOST', description="SMTP server host")
-    smtp_port: int = Field(default=465, alias='SMTP_PORT', description="SMTP server port")
+    smtp_port: int = Field(default=465, alias='SMTP_PORT', description="SMTP server port", ge=1, le=65535)
     smtp_user: str = Field(default='team.terrasite@yandex.ru', alias='SMTP_USER', description="SMTP auth username")
     smtp_password: str = Field(default='lncsiaezbmfjaltp', alias='SMTP_PASSWORD', description="SMTP auth password")
     from_email: EmailStr = Field(default='team.terrasite@yandex.ru', alias='FROM_EMAIL', description="Sender email address")
@@ -24,7 +23,6 @@ class Settings(BaseSettings):
         env_file_encoding='utf-8',
         extra='ignore'
     )
-
 
 config: Settings = Settings()
 
