@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, validator
 from typing import List, Optional
 from datetime import datetime
 
@@ -15,14 +15,14 @@ class LeadBase(BaseModel):
     call_time: Optional[str] = Field(None, description="Время звонка")
     email: Optional[EmailStr] = Field(None, description="Email клиента")
 
-    @field_validator('budget')
+    @validator('budget')
     def validate_budget(cls, value):
         allowed = ['30-50k', '50-150k', '150-300k', '300-500k', '500k+']
         if value not in allowed:
             raise ValueError(f'Недопустимый бюджет: {value}')
         return value
 
-    @field_validator('contact_method')
+    @validator('contact_method')
     def validate_contact_method(cls, value):
         allowed = ['whatsapp', 'telegram', 'phone', 'email']
         if value not in allowed:
@@ -36,7 +36,7 @@ class Lead(LeadBase):
     id: int
     timestamp: datetime
 
-    @field_validator('timestamp', mode='before')
+    @validator('timestamp', pre=True)
     def parse_timestamp(cls, v):
         if isinstance(v, str):
             return datetime.fromisoformat(v)

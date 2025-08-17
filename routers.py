@@ -11,6 +11,7 @@ router = APIRouter()
 @router.post("/submit-form", response_model=dict)
 async def submit_form(lead_data: LeadCreate):
   try:
+    logging.info(f"Получены данные формы: {lead_data.model_dump()}")
     await validate_lead_data(lead_data)
 
     if await is_duplicate_submission(lead_data):

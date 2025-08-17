@@ -256,12 +256,29 @@ async function submitForm() {
     isSubmitting = true;
     
     try {
+        const payload = { ...formData };
+
+        if (payload.contact_method !== 'email') delete payload.email;
+        if (payload.contact_method !== 'whatsapp') delete payload.phone;
+        if (payload.contact_method !== 'telegram') delete payload.telegram;
+        if (payload.contact_method !== 'phone') {
+            delete payload.phone_number;
+            delete payload.call_time;
+        }
+
+        Object.keys(payload).forEach((key) => {
+            const value = payload[key];
+            if (value === '' || (Array.isArray(value) && value.length === 0)) {
+                delete payload[key];
+            }
+        });
+
         const response = await fetch('/submit-form', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(formData)
+            body: JSON.stringify(payload)
         });
         
         if (response.ok) {
