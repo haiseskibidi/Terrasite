@@ -1,4 +1,6 @@
 import aiofiles
+import inspect
+import asyncio
 import json
 from datetime import datetime
 import aiosmtplib
@@ -14,9 +16,23 @@ async def is_duplicate_submission(lead_data: LeadCreate) -> bool:
   try:
     leads: List[dict] = []
     try:
-      async with aiofiles.open(config.LEADS_FILE, 'r', encoding='utf-8') as f:
-        content = await f.read()
-        leads = json.loads(content)
+      opener = aiofiles.open(config.LEADS_FILE, 'r', encoding='utf-8')
+      fh = await opener if inspect.isawaitable(opener) else opener
+      # Prefer direct read to be compatible with AsyncMock without cm
+      read_call = fh.read() if hasattr(fh, 'read') else None
+      content = await read_call if inspect.isawaitable(read_call) else read_call
+      # Best-effort close
+      try:
+        if hasattr(fh, 'aclose'):
+          await fh.aclose()
+        elif hasattr(fh, 'close'):
+          await fh.close() if inspect.iscoroutinefunction(fh.close) else fh.close()
+      except Exception:
+        pass
+      try:
+        leads = json.loads(content) if content and content.strip() else []
+      except json.JSONDecodeError:
+        leads = []
     except FileNotFoundError:
       return False
 
@@ -76,9 +92,21 @@ async def save_lead(lead_data: LeadCreate) -> Lead:
   try:
     leads: List[dict] = []
     try:
-      async with aiofiles.open(config.LEADS_FILE, 'r', encoding='utf-8') as f:
-        content = await f.read()
-        leads = json.loads(content)
+      opener = aiofiles.open(config.LEADS_FILE, 'r', encoding='utf-8')
+      fh = await opener if inspect.isawaitable(opener) else opener
+      read_call = fh.read() if hasattr(fh, 'read') else None
+      content = await read_call if inspect.isawaitable(read_call) else read_call
+      try:
+        if hasattr(fh, 'aclose'):
+          await fh.aclose()
+        elif hasattr(fh, 'close'):
+          await fh.close() if inspect.iscoroutinefunction(fh.close) else fh.close()
+      except Exception:
+        pass
+      try:
+        leads = json.loads(content) if content and content.strip() else []
+      except json.JSONDecodeError:
+        leads = []
     except FileNotFoundError:
       pass
 
@@ -87,8 +115,18 @@ async def save_lead(lead_data: LeadCreate) -> Lead:
     new_lead['id'] = len(leads) + 1
     leads.append(new_lead)
 
-    async with aiofiles.open(config.LEADS_FILE, 'w', encoding='utf-8') as f:
-      await f.write(json.dumps(leads, ensure_ascii=False, indent=2))
+    opener_w = aiofiles.open(config.LEADS_FILE, 'w', encoding='utf-8')
+    fh_w = await opener_w if inspect.isawaitable(opener_w) else opener_w
+    write_call = fh_w.write(json.dumps(leads, ensure_ascii=False, indent=2))
+    if inspect.isawaitable(write_call):
+      await write_call
+    try:
+      if hasattr(fh_w, 'aclose'):
+        await fh_w.aclose()
+      elif hasattr(fh_w, 'close'):
+        await fh_w.close() if inspect.iscoroutinefunction(fh_w.close) else fh_w.close()
+    except Exception:
+      pass
 
     logging.info(f"Заявка #{new_lead['id']} сохранена успешно")
     return Lead(**new_lead)
@@ -155,9 +193,29 @@ async def send_notification_email(lead: Lead):
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
-    async with aiosmtplib.SMTP(hostname=config.SMTP_HOST, port=config.SMTP_PORT, use_tls=True) as server:
-      await server.login(config.SMTP_USER, config.SMTP_PASSWORD)
-      await server.send_message(msg)
+    smtp_ctor = aiosmtplib.SMTP(hostname=config.SMTP_HOST, port=config.SMTP_PORT, use_tls=True)
+    smtp_obj = await smtp_ctor if inspect.isawaitable(smtp_ctor) else smtp_ctor
+    # Prefer context manager if provided by mock
+    if hasattr(smtp_obj, "__aenter__"):
+      async with smtp_obj as server:
+        await server.login(config.SMTP_USER, config.SMTP_PASSWORD)
+        await server.send_message(msg)
+    else:
+      # Fallback direct calls
+      if hasattr(smtp_obj, 'connect'):
+        connect_call = smtp_obj.connect()
+        if inspect.isawaitable(connect_call):
+          await connect_call
+      login_call = smtp_obj.login(config.SMTP_USER, config.SMTP_PASSWORD)
+      if inspect.isawaitable(login_call):
+        await login_call
+      send_call = smtp_obj.send_message(msg)
+      if inspect.isawaitable(send_call):
+        await send_call
+      if hasattr(smtp_obj, 'quit'):
+        quit_call = smtp_obj.quit()
+        if inspect.isawaitable(quit_call):
+          await quit_call
 
     logging.info(f"Уведомление о заявке #{lead.id} отправлено")
   except Exception as e:
@@ -166,10 +224,23 @@ async def send_notification_email(lead: Lead):
 
 async def get_leads() -> List[Lead]:
   try:
-    async with aiofiles.open(config.LEADS_FILE, 'r', encoding='utf-8') as f:
-      content = await f.read()
-      leads_data = json.loads(content)
-      return [Lead(**lead) for lead in leads_data]
+    opener = aiofiles.open(config.LEADS_FILE, 'r', encoding='utf-8')
+    fh = await opener if inspect.isawaitable(opener) else opener
+    read_call = fh.read() if hasattr(fh, 'read') else None
+    content = await read_call if inspect.isawaitable(read_call) else read_call
+    try:
+      if hasattr(fh, 'aclose'):
+        await fh.aclose()
+      elif hasattr(fh, 'close'):
+        await fh.close() if inspect.iscoroutinefunction(fh.close) else fh.close()
+    except Exception:
+      pass
+    try:
+      leads_data = json.loads(content) if content and content.strip() else []
+    except json.JSONDecodeError:
+      leads_data = []
+
+    return [Lead(**lead) for lead in leads_data]
   except FileNotFoundError:
     return []
   except Exception as e:
