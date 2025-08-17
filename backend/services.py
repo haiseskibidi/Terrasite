@@ -7,8 +7,8 @@ import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import List, Optional
-from schemas import Lead, LeadCreate
-from config import config, logging
+from backend.schemas import Lead, LeadCreate
+from backend.config import config, logging
 from fastapi import HTTPException, status
 
 
@@ -18,10 +18,8 @@ async def is_duplicate_submission(lead_data: LeadCreate) -> bool:
     try:
       opener = aiofiles.open(config.LEADS_FILE, 'r', encoding='utf-8')
       fh = await opener if inspect.isawaitable(opener) else opener
-      # Prefer direct read to be compatible with AsyncMock without cm
       read_call = fh.read() if hasattr(fh, 'read') else None
       content = await read_call if inspect.isawaitable(read_call) else read_call
-      # Best-effort close
       try:
         if hasattr(fh, 'aclose'):
           await fh.aclose()

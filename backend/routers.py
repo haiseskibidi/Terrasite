@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from schemas import LeadCreate, Lead
-from services import is_duplicate_submission, validate_lead_data, save_lead, send_notification_email, get_leads
+from backend.schemas import LeadCreate, Lead
+from backend.services import is_duplicate_submission, validate_lead_data, save_lead, send_notification_email, get_leads
 from typing import List
 from datetime import datetime
-from config import logging
+from backend.config import logging
 
 router = APIRouter()
 
