@@ -1,4 +1,3 @@
-
 import aiofiles
 import asyncio
 from abc import ABC, abstractmethod
@@ -12,7 +11,6 @@ from backend.schemas import Lead, LeadCreate
 from backend.config import config, logging
 from fastapi import HTTPException, status
 
-
 class ILeadRepository(ABC):
     @abstractmethod
     async def get_all(self) -> List[Dict[str, Any]]:
@@ -21,7 +19,6 @@ class ILeadRepository(ABC):
     @abstractmethod
     async def add(self, lead_data: Dict[str, Any]) -> None:
         pass
-
 
 class JsonLeadRepository(ILeadRepository):
     def __init__(self, file_path: str):
@@ -50,12 +47,10 @@ class JsonLeadRepository(ILeadRepository):
         leads.append(lead_data)
         await self._write_leads(leads)
 
-
 class ILeadValidator(ABC):
     @abstractmethod
     async def validate(self, lead_data: LeadCreate) -> None:
         pass
-
 
 class ContactMethodValidator(ILeadValidator):
     async def validate(self, lead_data: LeadCreate) -> None:
@@ -68,12 +63,10 @@ class ContactMethodValidator(ILeadValidator):
         elif lead_data.contact_method == 'email' and not lead_data.email:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Введите email адрес")
 
-
 class IDuplicateChecker(ABC):
     @abstractmethod
     async def is_duplicate(self, lead_data: LeadCreate) -> bool:
         pass
-
 
 class TimeBasedDuplicateChecker(IDuplicateChecker):
     def __init__(self, repository: ILeadRepository, duplicate_window: timedelta = timedelta(minutes=5)):
@@ -97,27 +90,24 @@ class TimeBasedDuplicateChecker(IDuplicateChecker):
         if not contact_value:
             return False
 
-        current_time = datetime.now()
         for lead in leads:
-            try:
-                lead_time = datetime.fromisoformat(lead.get('timestamp', ''))
-                if (current_time - lead_time) < self._duplicate_window and lead.get('contact_method') == lead_data.contact_method:
-                    lead_contact = self._get_contact_value(lead).lower().strip()
-                    if lead_contact == contact_value:
+            lead_time = datetime.fromisoformat(lead["timestamp"])
+            if (datetime.now() - lead_time) < self._duplicate_window:
+                if lead["contact_method"] == lead_data.contact_method:
+                    lead_contact_value = self._get_contact_value(lead).lower().strip()
+                    if lead_contact_value == contact_value:
                         return True
-            except ValueError:
-                continue
         return False
-
 
 class INotifier(ABC):
     @abstractmethod
     async def notify(self, lead: Lead) -> None:
         pass
 
-
 class EmailNotifier(INotifier):
-    def __init__(self, smtp_host: str, smtp_port: int, smtp_user: str, smtp_password: str, from_email: str, to_email: str):
+    def __init__(self, smtp_host: str = config.smtp_host, smtp_port: int = config.smtp_port,
+                 smtp_user: str = config.smtp_user, smtp_password: str = config.smtp_password,
+                 from_email: str = config.from_email, to_email: str = config.to_email):
         self._smtp_host = smtp_host
         self._smtp_port = smtp_port
         self._smtp_user = smtp_user
@@ -148,7 +138,7 @@ class EmailNotifier(INotifier):
             contact_value = lead.phone or ''
         elif lead.contact_method == 'telegram':
             contact_value = lead.telegram or ''
-        elif lead_contact_method == 'phone':
+        elif lead.contact_method == 'phone':
             contact_value = f"{lead.phone_number or ''}, время: {lead.call_time or ''}"
         elif lead.contact_method == 'email':
             contact_value = lead.email or ''
@@ -187,7 +177,6 @@ class EmailNotifier(INotifier):
             await server.send_message(msg)
 
         logging.info(f"Уведомление о заявке #{lead.id} отправлено")
-
 
 class LeadService:
     def __init__(self):

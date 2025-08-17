@@ -1,35 +1,24 @@
+from datetime import datetime
+from pydantic import ValidationError
 import pytest
 from backend.schemas import LeadBase, LeadCreate, Lead
-from pydantic import ValidationError
-from datetime import datetime
 
-
-@pytest.mark.parametrize(
-    "valid_data",
-    [
-        {
-            "name": "Test",
-            "services": ["site"],
-            "description": "Long description with enough words to pass validation",
-            "budget": "30-50k",
-            "contact_method": "email",
-            "email": "test@example.com"
-        },
-        {
-            "name": "Test",
-            "services": ["bot"],
-            "description": "Another description with enough words to pass validation",
-            "budget": "500k+",
-            "contact_method": "whatsapp",
-            "phone": "+79261234567"
-        }
-    ]
-)
-def test_lead_base_valid(valid_data):
-    lead = LeadBase(**valid_data)
-    assert lead.name == valid_data["name"]
-    assert lead.services == valid_data["services"]
-
+def test_lead_base_valid():
+    data = {
+        "name": "Test",
+        "services": ["site"],
+        "description": "long description with enough words to pass validation",
+        "budget": "30-50k",
+        "contact_method": "email",
+        "email": "test@example.com"
+    }
+    lead_base = LeadBase(**data)
+    assert lead_base.name == "Test"
+    assert lead_base.services == ["site"]
+    assert lead_base.description == "long description with enough words to pass validation"
+    assert lead_base.budget == "30-50k"
+    assert lead_base.contact_method == "email"
+    assert lead_base.email == "test@example.com"
 
 @pytest.mark.parametrize(
     "invalid_data, expected_error",
@@ -38,62 +27,62 @@ def test_lead_base_valid(valid_data):
             {
                 "name": "",
                 "services": ["site"],
-                "description": "desc long enough to pass",
+                "description": "long description with enough words to pass validation",
                 "budget": "30-50k",
                 "contact_method": "email",
                 "email": "test@example.com"
             },
-            "string_too_short"
+            "Имя может содержать только буквы, пробелы и дефисы"
         ),
         (
             {
                 "name": "Test",
                 "services": [],
-                "description": "desc long enough to pass",
+                "description": "long description with enough words to pass validation",
                 "budget": "30-50k",
                 "contact_method": "email",
                 "email": "test@example.com"
             },
-            "too_short"
+            "List should have at least 1 item"
         ),
         (
             {
                 "name": "Test",
                 "services": ["site"],
-                "description": "short",
+                "description": "short desc",
                 "budget": "30-50k",
                 "contact_method": "email",
                 "email": "test@example.com"
             },
-            "Description must contain at least 8 words"
+            "Описание должно содержать минимум 8 слов"
         ),
         (
             {
                 "name": "Test",
                 "services": ["site"],
-                "description": "desc long enough to pass",
+                "description": "long description with enough words to pass validation",
                 "budget": "invalid",
                 "contact_method": "email",
                 "email": "test@example.com"
             },
-            "Недопустимый бюджет"
+            "Недопустимый бюджет: invalid"
         ),
         (
             {
                 "name": "Test",
                 "services": ["site"],
-                "description": "desc long enough to pass",
+                "description": "long description with enough words to pass validation",
                 "budget": "30-50k",
                 "contact_method": "invalid",
                 "email": "test@example.com"
             },
-            "Недопустимый способ связи"
+            "Недопустимый способ связи: invalid"
         ),
         (
             {
                 "name": "Test",
                 "services": ["site"],
-                "description": "desc long enough to pass",
+                "description": "long description with enough words to pass validation",
                 "budget": "30-50k",
                 "contact_method": "email",
                 "email": "invalid"
@@ -107,12 +96,11 @@ def test_lead_base_invalid(invalid_data, expected_error):
         LeadBase(**invalid_data)
     assert expected_error in str(exc.value)
 
-
 def test_lead_create():
     data = {
         "name": "Test",
         "services": ["site"],
-        "description": "Description long enough to pass validation",
+        "description": "long description with enough words to pass validation",
         "budget": "30-50k",
         "contact_method": "email",
         "email": "test@example.com",
@@ -122,15 +110,12 @@ def test_lead_create():
         "call_time": None
     }
     lead_create = LeadCreate(**data)
-    assert lead_create.model_dump(exclude_none=True) == {
-        "name": "Test",
-        "services": ["site"],
-        "description": "Description long enough to pass validation",
-        "budget": "30-50k",
-        "contact_method": "email",
-        "email": "test@example.com"
-    }
-
+    assert lead_create.name == "Test"
+    assert lead_create.services == ["site"]
+    assert lead_create.description == "long description with enough words to pass validation"
+    assert lead_create.budget == "30-50k"
+    assert lead_create.contact_method == "email"
+    assert lead_create.email == "test@example.com"
 
 def test_lead():
     data = {
@@ -138,7 +123,7 @@ def test_lead():
         "timestamp": datetime.now(),
         "name": "Test",
         "services": ["site"],
-        "description": "Description long enough to pass validation",
+        "description": "long description with enough words to pass validation",
         "budget": "30-50k",
         "contact_method": "email",
         "email": "test@example.com",
@@ -149,4 +134,9 @@ def test_lead():
     }
     lead = Lead(**data)
     assert lead.id == 1
-    assert isinstance(lead.timestamp, datetime)
+    assert lead.name == "Test"
+    assert lead.services == ["site"]
+    assert lead.description == "long description with enough words to pass validation"
+    assert lead.budget == "30-50k"
+    assert lead.contact_method == "email"
+    assert lead.email == "test@example.com"

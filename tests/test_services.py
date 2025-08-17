@@ -1,6 +1,8 @@
 import pytest
 import pytest_asyncio
 import json
+from datetime import datetime, timedelta
+from fastapi import HTTPException
 from backend.services import (
     JsonLeadRepository,
     ContactMethodValidator,
@@ -9,10 +11,7 @@ from backend.services import (
     LeadService
 )
 from backend.schemas import LeadCreate, Lead
-from datetime import datetime, timedelta
 from unittest.mock import AsyncMock
-from fastapi import HTTPException
-
 
 @pytest.mark.asyncio
 async def test_json_lead_repository_no_file(mock_aiofiles_open):
@@ -20,7 +19,6 @@ async def test_json_lead_repository_no_file(mock_aiofiles_open):
     mock_aiofiles_open.side_effect = FileNotFoundError
     leads = await repo.get_all()
     assert leads == []
-
 
 @pytest.mark.asyncio
 async def test_json_lead_repository_existing(mock_aiofiles_open):
@@ -35,14 +33,10 @@ async def test_json_lead_repository_existing(mock_aiofiles_open):
         "contact_method": "email",
         "email": "test@example.com"
     }]
-    mock_file = AsyncMock()
-    mock_file.read.return_value = json.dumps(existing_leads)
-    mock_aiofiles_open.return_value.__aenter__.return_value = mock_file
-
+    mock_aiofiles_open.return_value.__aenter__.return_value.read.return_value = json.dumps(existing_leads)
     leads = await repo.get_all()
     assert len(leads) == 1
     assert leads[0]["id"] == 1
-
 
 @pytest.mark.asyncio
 async def test_json_lead_repository_add(mock_aiofiles_open):
@@ -55,14 +49,9 @@ async def test_json_lead_repository_add(mock_aiofiles_open):
         "contact_method": "email",
         "email": "test@example.com"
     }
-    mock_read_file = AsyncMock()
-    mock_read_file.read.side_effect = FileNotFoundError
-    mock_write_file = AsyncMock()
-    mock_aiofiles_open.side_effect = [mock_read_file, mock_write_file]
-
+    mock_aiofiles_open.side_effect = [FileNotFoundError, None]
     await repo.add(lead_data)
-    mock_write_file.write.assert_called_once()
-
+    mock_aiofiles_open.return_value.__aenter__.return_value.write.assert_called_once()
 
 @pytest.mark.asyncio
 async def test_contact_method_validator_valid():
@@ -76,7 +65,6 @@ async def test_contact_method_validator_valid():
         email="test@example.com"
     )
     await validator.validate(lead_data)
-
 
 @pytest.mark.parametrize(
     "contact_method, missing_field",
@@ -94,7 +82,7 @@ async def test_contact_method_validator_missing(contact_method, missing_field):
     data = {
         "name": "Test",
         "services": ["site"],
-        "description": "description long enough to pass validation for the test case to ensure it works",
+        "description": "long description with enough words to pass validation for the test case",
         "budget": "30-50k",
         "contact_method": contact_method
     }
@@ -105,7 +93,6 @@ async def test_contact_method_validator_missing(contact_method, missing_field):
     with pytest.raises(HTTPException):
         lead_data = LeadCreate(**data)
         await validator.validate(lead_data)
-
 
 @pytest.mark.asyncio
 async def test_time_based_duplicate_checker_no_file(mock_aiofiles_open):
@@ -122,7 +109,6 @@ async def test_time_based_duplicate_checker_no_file(mock_aiofiles_open):
     mock_aiofiles_open.side_effect = FileNotFoundError
     result = await checker.is_duplicate(lead_data)
     assert result == False
-
 
 @pytest.mark.asyncio
 async def test_time_based_duplicate_checker_duplicate(mock_aiofiles_open):
@@ -142,13 +128,9 @@ async def test_time_based_duplicate_checker_duplicate(mock_aiofiles_open):
         "contact_method": "email",
         "email": "test@example.com"
     }]
-    mock_file = AsyncMock()
-    mock_file.read.return_value = json.dumps(existing_leads)
-    mock_aiofiles_open.return_value.__aenter__.return_value = mock_file
-
+    mock_aiofiles_open.return_value.__aenter__.return_value.read.return_value = json.dumps(existing_leads)
     result = await checker.is_duplicate(lead_data)
     assert result == True
-
 
 @pytest.mark.asyncio
 async def test_time_based_duplicate_checker_not_duplicate_time(mock_aiofiles_open):
@@ -168,13 +150,9 @@ async def test_time_based_duplicate_checker_not_duplicate_time(mock_aiofiles_ope
         "contact_method": "email",
         "email": "test@example.com"
     }]
-    mock_file = AsyncMock()
-    mock_file.read.return_value = json.dumps(existing_leads)
-    mock_aiofiles_open.return_value.__aenter__.return_value = mock_file
-
+    mock_aiofiles_open.return_value.__aenter__.return_value.read.return_value = json.dumps(existing_leads)
     result = await checker.is_duplicate(lead_data)
     assert result == False
-
 
 @pytest.mark.asyncio
 async def test_time_based_duplicate_checker_different_method(mock_aiofiles_open):
@@ -194,13 +172,9 @@ async def test_time_based_duplicate_checker_different_method(mock_aiofiles_open)
         "contact_method": "email",
         "email": "test@example.com"
     }]
-    mock_file = AsyncMock()
-    mock_file.read.return_value = json.dumps(existing_leads)
-    mock_aiofiles_open.return_value.__aenter__.return_value = mock_file
-
+    mock_aiofiles_open.return_value.__aenter__.return_value.read.return_value = json.dumps(existing_leads)
     result = await checker.is_duplicate(lead_data)
     assert result == False
-
 
 @pytest.mark.asyncio
 async def test_time_based_duplicate_checker_no_contact_value():
@@ -215,7 +189,6 @@ async def test_time_based_duplicate_checker_no_contact_value():
     )
     result = await checker.is_duplicate(lead_data)
     assert result == False
-
 
 @pytest.mark.asyncio
 async def test_email_notifier(mock_aiosmtplib):
@@ -240,7 +213,6 @@ async def test_email_notifier(mock_aiosmtplib):
     await notifier.notify(lead)
     mock_aiosmtplib.login.assert_called_once()
     mock_aiosmtplib.send_message.assert_called_once()
-
 
 @pytest.mark.asyncio
 async def test_email_notifier_content(mock_aiosmtplib):
@@ -269,7 +241,6 @@ async def test_email_notifier_content(mock_aiosmtplib):
     assert lead.name in body
     assert "email" in body.lower()
 
-
 @pytest.mark.asyncio
 async def test_lead_service_process_lead(mock_aiofiles_open, mock_aiosmtplib):
     service = LeadService()
@@ -281,16 +252,11 @@ async def test_lead_service_process_lead(mock_aiofiles_open, mock_aiosmtplib):
         contact_method="email",
         email="test@example.com"
     )
-    mock_read_file = AsyncMock()
-    mock_read_file.read.side_effect = FileNotFoundError
-    mock_write_file = AsyncMock()
-    mock_aiofiles_open.side_effect = [mock_read_file, mock_write_file]
-
+    mock_aiofiles_open.side_effect = [FileNotFoundError, None]
     lead = await service.process_lead(lead_data)
     assert lead.id == 1
-    assert mock_write_file.write.called
+    mock_aiofiles_open.return_value.__aenter__.return_value.write.assert_called()
     assert mock_aiosmtplib.send_message.called
-
 
 @pytest.mark.asyncio
 async def test_lead_service_get_all_leads(mock_aiofiles_open):
@@ -305,10 +271,7 @@ async def test_lead_service_get_all_leads(mock_aiofiles_open):
         "contact_method": "email",
         "email": "test@example.com"
     }]
-    mock_file = AsyncMock()
-    mock_file.read.return_value = json.dumps(existing_leads)
-    mock_aiofiles_open.return_value.__aenter__.return_value = mock_file
-
+    mock_aiofiles_open.return_value.__aenter__.return_value.read.return_value = json.dumps(existing_leads)
     leads = await service.get_all_leads()
     assert len(leads) == 1
     assert isinstance(leads[0], Lead)

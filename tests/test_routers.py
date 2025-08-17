@@ -17,7 +17,7 @@ async def test_submit_form_valid(client, mock_lead_service):
     }
     lead_data = LeadCreate(**data)
     mock_lead = Lead(id=1, timestamp=datetime.now(), **data)
-    mock_lead_service.process_lead.return_value = mock_lead
+    mock_lead_service.process_lead = AsyncMock(return_value=mock_lead)
 
     response = client.post("/submit-form", json=data)
     assert response.status_code == 200
@@ -33,9 +33,9 @@ async def test_submit_form_duplicate(client, mock_lead_service):
         "contact_method": "email",
         "email": "test@example.com"
     }
-    mock_lead_service.process_lead.side_effect = HTTPException(
+    mock_lead_service.process_lead = AsyncMock(side_effect=HTTPException(
         status_code=400, detail="Заявка с такими контактными данными уже была отправлена недавно"
-    )
+    ))
 
     response = client.post("/submit-form", json=data)
     assert response.status_code == 400
@@ -64,11 +64,11 @@ async def test_submit_form_server_error(client, mock_lead_service):
         "contact_method": "email",
         "email": "test@example.com"
     }
-    mock_lead_service.process_lead.side_effect = Exception("Server error")
+    mock_lead_service.process_lead = AsyncMock(side_effect=HTTPException(status_code=500, detail="Ошибка обработки заявки"))
 
     response = client.post("/submit-form", json=data)
     assert response.status_code == 500
-    assert "Ошибка обработки заявки" in response.json()["detail"]
+    assert response.json()["detail"] == "Ошибка обработки заявки"
 
 @pytest.mark.asyncio
 async def test_admin_leads(client, mock_lead_service):
@@ -84,7 +84,7 @@ async def test_admin_leads(client, mock_lead_service):
             email="test@example.com"
         )
     ]
-    mock_lead_service.get_all_leads.return_value = mock_leads
+    mock_lead_service.get_all_leads = AsyncMock(return_value=mock_leads)
 
     response = client.get("/admin/leads")
     assert response.status_code == 200

@@ -3,6 +3,7 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from backend.main import app
 from backend.config import config
+from backend.services import LeadService
 import os
 from unittest.mock import AsyncMock, MagicMock
 
@@ -28,7 +29,7 @@ async def mock_aiofiles_open(monkeypatch):
     mock_context = AsyncMock()
     mock_context.__aenter__.return_value = mock_context
     mock_context.__aexit__.return_value = None
-    mock_context.read = AsyncMock()
+    mock_context.read = AsyncMock(return_value="[]")
     mock_context.write = AsyncMock()
     mock_open.return_value = mock_context
     monkeypatch.setattr("aiofiles.open", mock_open)
@@ -42,3 +43,7 @@ async def mock_aiosmtplib(monkeypatch):
     mock_smtp.return_value.__aexit__.return_value = None
     monkeypatch.setattr("aiosmtplib.SMTP", mock_smtp)
     return mock_server
+
+@pytest.fixture
+def mock_lead_service(mocker):
+    return mocker.Mock(spec=LeadService)

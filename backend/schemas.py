@@ -3,14 +3,12 @@ from typing import List, Optional, Any
 from datetime import datetime
 import re
 
-
 class LeadBase(BaseModel):
     name: str = Field(..., min_length=2, max_length=50, description="Имя клиента")
-    services: List[str] = Field(..., min_length=1, description="Список услуг")
+    services: List[str] = Field(..., min_items=1, description="Список услуг")
     description: str = Field(..., min_length=50, max_length=2000, description="Описание проекта")
     budget: str = Field(..., description="Бюджет проекта")
     contact_method: str = Field(..., description="Способ связи")
-
     phone: Optional[str] = Field(None, description="Номер WhatsApp")
     telegram: Optional[str] = Field(None, description="Telegram username")
     phone_number: Optional[str] = Field(None, description="Номер телефона")
@@ -21,14 +19,14 @@ class LeadBase(BaseModel):
     def validate_budget(cls, value: str) -> str:
         allowed = ['30-50k', '50-150k', '150-300k', '300-500k', '500k+']
         if value not in allowed:
-            raise ValueError(f'Недопустимый бюджет: {value}')
+            raise ValueError(f"Недопустимый бюджет: {value}")
         return value
 
     @field_validator('contact_method')
     def validate_contact_method(cls, value: str) -> str:
         allowed = ['whatsapp', 'telegram', 'phone', 'email']
         if value not in allowed:
-            raise ValueError(f'Недопустимый способ связи: {value}')
+            raise ValueError(f"Недопустимый способ связи: {value}")
         return value
 
     @field_validator('name')
@@ -80,10 +78,8 @@ class LeadBase(BaseModel):
             raise ValueError('Укажите время для звонка более подробно')
         return value.strip()
 
-
 class LeadCreate(LeadBase):
     pass
-
 
 class Lead(LeadBase):
     id: int
@@ -94,6 +90,3 @@ class Lead(LeadBase):
         if isinstance(v, str):
             return datetime.fromisoformat(v)
         return v
-
-    class Config:
-        from_attributes = True

@@ -20,7 +20,8 @@ def test_config_with_env(monkeypatch):
     assert cfg.smtp_host == "test.host"
     assert cfg.smtp_port == 587
 
-def test_config_validation_error(monkeypatch):
-    monkeypatch.setenv("APP_SMTP_PORT", "invalid")
+@pytest.mark.parametrize("invalid_port", ["abc", "-1", "1000000"])
+def test_config_validation_error(invalid_port, monkeypatch):
+    monkeypatch.setenv("APP_SMTP_PORT", invalid_port)
     with pytest.raises(ValidationError):
         Settings()
