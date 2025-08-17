@@ -6,35 +6,42 @@ from datetime import datetime
 import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, Union, Awaitable
 from backend.schemas import Lead, LeadCreate
 from backend.config import config, logging
 from fastapi import HTTPException, status
+from types import TracebackType
+from typing_extensions import Self
 
 
 async def is_duplicate_submission(lead_data: LeadCreate) -> bool:
   try:
-    leads: List[dict] = []
+    leads: List[Dict[str, Any]] = []
     try:
-      opener = aiofiles.open(config.LEADS_FILE, 'r', encoding='utf-8')
-      fh = await opener if inspect.isawaitable(opener) else opener
-      read_call = fh.read() if hasattr(fh, 'read') else None
-      content = await read_call if inspect.isawaitable(read_call) else read_call
+      opener: Union[
+        aiofiles.threadpool.AsyncTextIOWrapper, Awaitable[aiofiles.threadpool.AsyncTextIOWrapper]] = aiofiles.open(
+        config.LEADS_FILE, 'r', encoding='utf-8'
+      )
+      fh: aiofiles.threadpool.AsyncTextIOWrapper = await opener if inspect.isawaitable(opener) else opener
+      read_call: Union[str, Awaitable[str], None] = fh.read() if hasattr(fh, 'read') else None
+      content: str = await read_call if inspect.isawaitable(read_call) else read_call
       try:
         if hasattr(fh, 'aclose'):
           await fh.aclose()
         elif hasattr(fh, 'close'):
-          await fh.close() if inspect.iscoroutinefunction(fh.close) else fh.close()
-      except Exception:
-        pass
+          close_call = fh.close()
+          await close_call if inspect.isawaitable(close_call) else close_call
+      except Exception as e:
+        logging.warning(f"Ошибка закрытия файла: {e}")
       try:
         leads = json.loads(content) if content and content.strip() else []
-      except json.JSONDecodeError:
+      except json.JSONDecodeError as e:
+        logging.warning(f"Ошибка декодирования JSON: {e}")
         leads = []
     except FileNotFoundError:
       return False
 
-    contact_value = ""
+    contact_value: str = ""
     if lead_data.contact_method == 'whatsapp':
       contact_value = lead_data.phone or ''
     elif lead_data.contact_method == 'telegram':
@@ -47,14 +54,15 @@ async def is_duplicate_submission(lead_data: LeadCreate) -> bool:
     if not contact_value:
       return False
 
-    current_time = datetime.now()
+    current_time: datetime = datetime.now()
     for lead in leads:
       try:
-        lead_time = datetime.fromisoformat(lead.get('timestamp', ''))
-        time_diff = (current_time - lead_time).total_seconds()
+        lead_time_str: str = lead.get('timestamp', '')
+        lead_time: datetime = datetime.fromisoformat(lead_time_str)
+        time_diff: float = (current_time - lead_time).total_seconds()
 
         if time_diff < 300 and lead.get('contact_method') == lead_data.contact_method:
-          lead_contact_value = ""
+          lead_contact_value: str = ""
           if lead_data.contact_method == 'whatsapp':
             lead_contact_value = lead.get('phone', '')
           elif lead_data.contact_method == 'telegram':
@@ -66,7 +74,8 @@ async def is_duplicate_submission(lead_data: LeadCreate) -> bool:
 
           if lead_contact_value.lower().strip() == contact_value.lower().strip():
             return True
-      except (ValueError, TypeError):
+      except (ValueError, TypeError) as e:
+        logging.warning(f"Ошибка обработки данных заявки: {e}")
         continue
 
     return False
@@ -75,84 +84,108 @@ async def is_duplicate_submission(lead_data: LeadCreate) -> bool:
     return False
 
 
-async def validate_lead_data(lead_data: LeadCreate):
+async def validate_lead_data(lead_data: LeadCreate) -> None:
   if lead_data.contact_method == 'whatsapp' and not lead_data.phone:
-    raise HTTPException(status_code=400, detail="Введите номер WhatsApp")
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="Введите номер WhatsApp"
+    )
   elif lead_data.contact_method == 'telegram' and not lead_data.telegram:
-    raise HTTPException(status_code=400, detail="Введите Telegram username")
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="Введите Telegram username"
+    )
   elif lead_data.contact_method == 'phone' and (not lead_data.phone_number or not lead_data.call_time):
-    raise HTTPException(status_code=400, detail="Введите номер телефона и время для звонка")
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="Введите номер телефона и время для звонка"
+    )
   elif lead_data.contact_method == 'email' and not lead_data.email:
-    raise HTTPException(status_code=400, detail="Введите email адрес")
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="Введите email адрес"
+    )
 
 
 async def save_lead(lead_data: LeadCreate) -> Lead:
   try:
-    leads: List[dict] = []
+    leads: List[Dict[str, Any]] = []
     try:
-      opener = aiofiles.open(config.LEADS_FILE, 'r', encoding='utf-8')
-      fh = await opener if inspect.isawaitable(opener) else opener
-      read_call = fh.read() if hasattr(fh, 'read') else None
-      content = await read_call if inspect.isawaitable(read_call) else read_call
+      opener: Union[
+        aiofiles.threadpool.AsyncTextIOWrapper, Awaitable[aiofiles.threadpool.AsyncTextIOWrapper]] = aiofiles.open(
+        config.LEADS_FILE, 'r', encoding='utf-8'
+      )
+      fh: aiofiles.threadpool.AsyncTextIOWrapper = await opener if inspect.isawaitable(opener) else opener
+      read_call: Union[str, Awaitable[str], None] = fh.read() if hasattr(fh, 'read') else None
+      content: str = await read_call if inspect.isawaitable(read_call) else read_call
       try:
         if hasattr(fh, 'aclose'):
           await fh.aclose()
         elif hasattr(fh, 'close'):
-          await fh.close() if inspect.iscoroutinefunction(fh.close) else fh.close()
-      except Exception:
-        pass
+          close_call = fh.close()
+          await close_call if inspect.isawaitable(close_call) else close_call
+      except Exception as e:
+        logging.warning(f"Ошибка закрытия файла: {e}")
       try:
         leads = json.loads(content) if content and content.strip() else []
-      except json.JSONDecodeError:
+      except json.JSONDecodeError as e:
+        logging.warning(f"Ошибка декодирования JSON: {e}")
         leads = []
     except FileNotFoundError:
       pass
 
-    new_lead = lead_data.model_dump(exclude_none=True)
+    new_lead: Dict[str, Any] = lead_data.model_dump(exclude_none=True)
     new_lead['timestamp'] = datetime.now().isoformat()
     new_lead['id'] = len(leads) + 1
     leads.append(new_lead)
 
-    opener_w = aiofiles.open(config.LEADS_FILE, 'w', encoding='utf-8')
-    fh_w = await opener_w if inspect.isawaitable(opener_w) else opener_w
-    write_call = fh_w.write(json.dumps(leads, ensure_ascii=False, indent=2))
+    opener_w: Union[
+      aiofiles.threadpool.AsyncTextIOWrapper, Awaitable[aiofiles.threadpool.AsyncTextIOWrapper]] = aiofiles.open(
+      config.LEADS_FILE, 'w', encoding='utf-8'
+    )
+    fh_w: aiofiles.threadpool.AsyncTextIOWrapper = await opener_w if inspect.isawaitable(opener_w) else opener_w
+    write_call: Union[None, Awaitable[None]] = fh_w.write(json.dumps(leads, ensure_ascii=False, indent=2))
     if inspect.isawaitable(write_call):
       await write_call
     try:
       if hasattr(fh_w, 'aclose'):
         await fh_w.aclose()
       elif hasattr(fh_w, 'close'):
-        await fh_w.close() if inspect.iscoroutinefunction(fh_w.close) else fh_w.close()
-    except Exception:
-      pass
+        close_call = fh_w.close()
+        await close_call if inspect.isawaitable(close_call) else close_call
+    except Exception as e:
+      logging.warning(f"Ошибка закрытия файла: {e}")
 
     logging.info(f"Заявка #{new_lead['id']} сохранена успешно")
     return Lead(**new_lead)
   except Exception as e:
     logging.error(f"Ошибка сохранения заявки: {e}")
-    raise HTTPException(status_code=500, detail="Ошибка сохранения заявки")
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail="Ошибка сохранения заявки"
+    )
 
 
-async def send_notification_email(lead: Lead):
+async def send_notification_email(lead: Lead) -> None:
   try:
-    services_text = ", ".join(lead.services)
-    budget_map = {
+    services_text: str = ", ".join(lead.services)
+    budget_map: Dict[str, str] = {
       '30-50k': '30-50 тыс',
       '50-150k': '50-150 тыс',
       '150-300k': '150-300 тыс',
       '300-500k': '300-500 тыс',
       '500k+': '500+ тыс'
     }
-    budget_text = budget_map.get(lead.budget, lead.budget)
+    budget_text: str = budget_map.get(lead.budget, lead.budget)
 
-    contact_method_text = {
+    contact_method_text: str = {
       'whatsapp': 'WhatsApp',
       'telegram': 'Telegram',
       'phone': 'Звонок',
       'email': 'Email'
     }.get(lead.contact_method, lead.contact_method)
 
-    contact_value = ''
+    contact_value: str = ''
     if lead.contact_method == 'whatsapp':
       contact_value = lead.phone or ''
     elif lead.contact_method == 'telegram':
@@ -162,9 +195,9 @@ async def send_notification_email(lead: Lead):
     elif lead.contact_method == 'email':
       contact_value = lead.email or ''
 
-    subject = f"Новая заявка с сайта Terrasite от {lead.name}"
+    subject: str = f"Новая заявка с сайта Terrasite от {lead.name}"
 
-    body = f"""
+    body: str = f"""
 Новая заявка с сайта Terrasite!
 
 Контактная информация:
@@ -185,21 +218,24 @@ async def send_notification_email(lead: Lead):
 Отправлено автоматически с сайта Terrasite
         """.strip()
 
-    msg = MIMEMultipart()
+    msg: MIMEMultipart = MIMEMultipart()
     msg['From'] = config.FROM_EMAIL
     msg['To'] = config.TO_EMAIL
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
-    smtp_ctor = aiosmtplib.SMTP(hostname=config.SMTP_HOST, port=config.SMTP_PORT, use_tls=True)
-    smtp_obj = await smtp_ctor if inspect.isawaitable(smtp_ctor) else smtp_ctor
-    # Prefer context manager if provided by mock
+    smtp_ctor: Union[aiosmtplib.SMTP, Awaitable[aiosmtplib.SMTP]] = aiosmtplib.SMTP(
+      hostname=config.SMTP_HOST,
+      port=config.SMTP_PORT,
+      use_tls=True
+    )
+    smtp_obj: aiosmtplib.SMTP = await smtp_ctor if inspect.isawaitable(smtp_ctor) else smtp_ctor
+
     if hasattr(smtp_obj, "__aenter__"):
       async with smtp_obj as server:
         await server.login(config.SMTP_USER, config.SMTP_PASSWORD)
         await server.send_message(msg)
     else:
-      # Fallback direct calls
       if hasattr(smtp_obj, 'connect'):
         connect_call = smtp_obj.connect()
         if inspect.isawaitable(connect_call):
@@ -222,20 +258,25 @@ async def send_notification_email(lead: Lead):
 
 async def get_leads() -> List[Lead]:
   try:
-    opener = aiofiles.open(config.LEADS_FILE, 'r', encoding='utf-8')
-    fh = await opener if inspect.isawaitable(opener) else opener
-    read_call = fh.read() if hasattr(fh, 'read') else None
-    content = await read_call if inspect.isawaitable(read_call) else read_call
+    opener: Union[
+      aiofiles.threadpool.AsyncTextIOWrapper, Awaitable[aiofiles.threadpool.AsyncTextIOWrapper]] = aiofiles.open(
+      config.LEADS_FILE, 'r', encoding='utf-8'
+    )
+    fh: aiofiles.threadpool.AsyncTextIOWrapper = await opener if inspect.isawaitable(opener) else opener
+    read_call: Union[str, Awaitable[str], None] = fh.read() if hasattr(fh, 'read') else None
+    content: str = await read_call if inspect.isawaitable(read_call) else read_call
     try:
       if hasattr(fh, 'aclose'):
         await fh.aclose()
       elif hasattr(fh, 'close'):
-        await fh.close() if inspect.iscoroutinefunction(fh.close) else fh.close()
-    except Exception:
-      pass
+        close_call = fh.close()
+        await close_call if inspect.isawaitable(close_call) else close_call
+    except Exception as e:
+      logging.warning(f"Ошибка закрытия файла: {e}")
     try:
-      leads_data = json.loads(content) if content and content.strip() else []
-    except json.JSONDecodeError:
+      leads_data: List[Dict[str, Any]] = json.loads(content) if content and content.strip() else []
+    except json.JSONDecodeError as e:
+      logging.warning(f"Ошибка декодирования JSON: {e}")
       leads_data = []
 
     return [Lead(**lead) for lead in leads_data]
@@ -243,4 +284,7 @@ async def get_leads() -> List[Lead]:
     return []
   except Exception as e:
     logging.error(f"Ошибка получения заявок: {e}")
-    raise HTTPException(status_code=500, detail="Ошибка получения данных")
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail="Ошибка получения данных"
+    )
