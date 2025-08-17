@@ -536,30 +536,18 @@ body {
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
-/* Метки полей */
-.form-label {
-    display: block;
-    color: #e2e8f0;
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 8px;
-    margin-top: 16px;
+.floating-input {
+    position: relative;
+    margin-bottom: 40px;
 }
 
-.form-label:first-child {
-    margin-top: 0;
-}
-
-.contact-field-label {
-    margin-top: 24px;
-}
-
-textarea, input[type="text"], input[type="email"], input[type="tel"] {
+.floating-input input,
+.floating-input textarea {
     width: 100%;
-    padding: 16px;
+    padding: 18px 24px;
     border: 2px solid rgba(59, 130, 246, 0.2);
     border-radius: 12px;
-    font-size: 14px;
+    font-size: 16px;
     font-family: inherit;
     background: rgba(30, 41, 59, 0.5);
     backdrop-filter: blur(10px);
@@ -567,10 +555,51 @@ textarea, input[type="text"], input[type="email"], input[type="tel"] {
     transition: all 0.3s ease;
     box-sizing: border-box;
     line-height: 1.4;
-    min-height: 20px;
+    outline: none;
 }
 
-textarea:focus, input:focus {
+.floating-input textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.floating-label {
+    position: absolute;
+    top: 50%;
+    left: 24px;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 16px;
+    font-weight: 400;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.floating-input textarea + .floating-label {
+    top: 32px;
+    transform: translateY(0);
+}
+
+.floating-input input:focus + .floating-label,
+.floating-input input:not(:placeholder-shown) + .floating-label,
+.floating-input textarea:focus + .floating-label,
+.floating-input textarea:not(:placeholder-shown) + .floating-label {
+    top: -24px;
+    left: 20px;
+    transform: translateY(0);
+    font-size: 12px;
+    font-weight: 500;
+    color: #3b82f6;
+    background: transparent;
+    padding: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.floating-input input:focus,
+.floating-input textarea:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
@@ -672,9 +701,13 @@ textarea {
 }
 
 .contact-fields {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 40px;
+}
+
+.contact-fields .floating-input {
     margin-bottom: 40px;
 }
 

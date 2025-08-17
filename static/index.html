@@ -90,7 +90,7 @@
                         </div>
                     </div>
 
-                    <form class="contact-form" id="contactForm">
+                    <form class="contact-form" id="contactForm" novalidate>
                         <div class="form-step active" data-step="1">
                             <h3>Какие услуги вас интересуют?</h3>
                             <p class="step-subtitle">Нужно выбрать как минимум что-то одно</p>
@@ -117,16 +117,18 @@
                             <h3>В чем заключается суть вашего проекта?</h3>
                             <p class="step-subtitle">Описание обязательно для заполнения</p>
                             
-                            <label for="description" class="form-label">Описание проекта</label>
-                            <textarea 
-                                id="description"
-                                name="description" 
-                                placeholder="Опишите свой проект (минимум 50 символов)"
-                                rows="6"
-                                required
-                                maxlength="2000"
-                                oninput="updateCharCount()"
-                            ></textarea>
+                            <div class="floating-input">
+                                <textarea 
+                                    id="description"
+                                    name="description" 
+                                    placeholder=" "
+                                    rows="6"
+                                    required
+                                    maxlength="2000"
+                                    oninput="updateCharCount()"
+                                ></textarea>
+                                <label for="description" class="floating-label">Описание проекта</label>
+                            </div>
                             <div class="char-counter">
                                 <span id="char-count">0</span> / 2000 символов (минимум 50)
                             </div>
@@ -206,23 +208,35 @@
                             </div>
 
                             <div class="contact-fields">
-                                <label for="name" class="form-label">Ваше имя</label>
-                                <input type="text" id="name" name="name" placeholder="Ваше имя" required>
+                                <div class="floating-input">
+                                    <input type="text" id="name" name="name" placeholder=" " required>
+                                    <label for="name" class="floating-label">Ваше имя</label>
+                                </div>
                                 
-                                <label for="whatsapp-field" class="form-label contact-field-label" id="whatsapp-label" style="display: none;">Номер WhatsApp</label>
-                                <input type="tel" name="phone" placeholder="Ваш номер WhatsApp" id="whatsapp-field" style="display: none;">
+                                <div class="floating-input contact-field" id="whatsapp-wrapper" style="display: none;">
+                                    <input type="tel" name="phone" id="whatsapp-field" placeholder=" " required>
+                                    <label for="whatsapp-field" class="floating-label">Номер WhatsApp</label>
+                                </div>
                                 
-                                <label for="telegram-field" class="form-label contact-field-label" id="telegram-label" style="display: none;">Telegram</label>
-                                <input type="text" name="telegram" placeholder="Telegram (@username)" id="telegram-field" style="display: none;">
+                                <div class="floating-input contact-field" id="telegram-wrapper" style="display: none;">
+                                    <input type="text" name="telegram" id="telegram-field" placeholder=" " required>
+                                    <label for="telegram-field" class="floating-label">Telegram (@username)</label>
+                                </div>
                                 
-                                <label for="phone-number-field" class="form-label contact-field-label" id="phone-label" style="display: none;">Номер телефона</label>
-                                <input type="tel" name="phone_number" placeholder="Ваш номер телефона" id="phone-number-field" style="display: none;">
+                                <div class="floating-input contact-field" id="phone-wrapper" style="display: none;">
+                                    <input type="tel" name="phone_number" id="phone-number-field" placeholder=" " required>
+                                    <label for="phone-number-field" class="floating-label">Номер телефона</label>
+                                </div>
                                 
-                                <label for="call-time-field" class="form-label contact-field-label" id="time-label" style="display: none;">Время для звонка</label>
-                                <input type="text" name="call_time" placeholder="Время для звонка (МСК)" id="call-time-field" style="display: none;">
+                                <div class="floating-input contact-field" id="time-wrapper" style="display: none;">
+                                    <input type="text" name="call_time" id="call-time-field" placeholder=" " required>
+                                    <label for="call-time-field" class="floating-label">Время для звонка (по МСК)</label>
+                                </div>
                                 
-                                <label for="email-field" class="form-label contact-field-label" id="email-label" style="display: none;">Email</label>
-                                <input type="email" name="email" placeholder="Ваш email" id="email-field" style="display: none;">
+                                <div class="floating-input contact-field" id="email-wrapper" style="display: none;">
+                                    <input type="email" name="email" id="email-field" placeholder=" " required>
+                                    <label for="email-field" class="floating-label">Email</label>
+                                </div>
                             </div>
 
                             <div class="step-navigation">

@@ -524,52 +524,44 @@ function animateOnScroll() {
 
 function updateContactField() {
     const selectedMethod = document.querySelector('input[name="contact_method"]:checked');
+    const whatsappWrapper = document.getElementById('whatsapp-wrapper');
+    const telegramWrapper = document.getElementById('telegram-wrapper');
+    const phoneWrapper = document.getElementById('phone-wrapper');
+    const timeWrapper = document.getElementById('time-wrapper');
+    const emailWrapper = document.getElementById('email-wrapper');
+    
     const whatsappField = document.getElementById('whatsapp-field');
     const telegramField = document.getElementById('telegram-field');
     const phoneNumberField = document.getElementById('phone-number-field');
     const callTimeField = document.getElementById('call-time-field');
     const emailField = document.getElementById('email-field');
     
-    // Получаем label элементы
-    const whatsappLabel = document.getElementById('whatsapp-label');
-    const telegramLabel = document.getElementById('telegram-label');
-    const phoneLabel = document.getElementById('phone-label');
-    const timeLabel = document.getElementById('time-label');
-    const emailLabel = document.getElementById('email-label');
-    
     if (!selectedMethod) return;
     
-    // Скрываем все поля и их метки
-    [whatsappField, telegramField, phoneNumberField, callTimeField, emailField].forEach(field => {
-        field.style.display = 'none';
-        field.required = false;
+    [whatsappWrapper, telegramWrapper, phoneWrapper, timeWrapper, emailWrapper].forEach(wrapper => {
+        wrapper.style.display = 'none';
     });
-    [whatsappLabel, telegramLabel, phoneLabel, timeLabel, emailLabel].forEach(label => {
-        label.style.display = 'none';
+    [whatsappField, telegramField, phoneNumberField, callTimeField, emailField].forEach(field => {
+        field.required = false;
     });
     
     switch(selectedMethod.value) {
         case 'whatsapp':
-            whatsappField.style.display = 'block';
-            whatsappLabel.style.display = 'block';
+            whatsappWrapper.style.display = 'block';
             whatsappField.required = true;
             break;
         case 'telegram':
-            telegramField.style.display = 'block';
-            telegramLabel.style.display = 'block';
+            telegramWrapper.style.display = 'block';
             telegramField.required = true;
             break;
         case 'phone':
-            phoneNumberField.style.display = 'block';
-            callTimeField.style.display = 'block';
-            phoneLabel.style.display = 'block';
-            timeLabel.style.display = 'block';
+            phoneWrapper.style.display = 'block';
+            timeWrapper.style.display = 'block';
             phoneNumberField.required = true;
             callTimeField.required = true;
             break;
         case 'email':
-            emailField.style.display = 'block';
-            emailLabel.style.display = 'block';
+            emailWrapper.style.display = 'block';
             emailField.required = true;
             break;
     }
