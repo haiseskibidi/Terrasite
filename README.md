@@ -145,23 +145,37 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ## Файлы проекта
 
 ```
-Terrasite/
-├── main.py             # Точка входа FastAPI приложения
-├── config.py           # Конфигурация и настройки
-├── routers.py          # API маршруты
-├── services.py         # Бизнес-логика (файлы, email)
-├── schemas.py          # Pydantic модели для валидации
-├── requirements.txt    # Python зависимости
-├── index.html          # Главная страница сайта
-├── styles.css          # CSS стили (темная тема)
-├── script.js           # JavaScript (многошаговая форма)
-├── leads.json          # База данных заявок (JSON)
-├── tests/              # Директория с тестами
-│   ├── test_config.py
-│   ├── test_routers.py
-│   ├── test_schemas.py
-│   └── test_services.py
-└── README.md           # Документация
+terrasite/
+├── backend/                   # Основная бэкенд-часть приложения
+│   ├── __init__.py            # Инициализация Python-пакета
+│   ├── main.py                # Точка входа FastAPI приложения
+│   ├── config.py              # Конфигурационные параметры (SMTP, пути к файлам)
+│   ├── routers.py             # Все API-роуты приложения
+│   ├── schemas.py             # Pydantic-модели для валидации данных
+│   ├── services.py            # Бизнес-логика (отправка email, обработка данных)
+│   └── data/                  # Хранение данных приложения
+│       ├── leads.json         # JSON-база заявок
+│       └── app.log            # Лог-файл приложения
+│
+├── static/                    # Статические файлы для фронтенда
+│   ├── index.html             # Главная HTML-страница
+│   ├── script.js              # JavaScript-логика формы
+│   ├── styles.css             # Стили сайта (темная тема)
+│   └── images/                # Изображения
+│       └── logo.svg           # Логотип проекта
+│
+├── tests/                     # Тесты (добавлено согласно скриншоту)
+│   ├── __init__.py            # Инициализация тестового пакета
+│   ├── conftest.py            # Фикстуры pytest
+│   ├── pytest.ini             # Конфигурация pytest
+│   ├── test_config.py         # Тесты для config.py
+│   ├── test_routers.py        # Тесты API-роутов
+│   ├── test_schemas.py        # Тесты Pydantic-моделей
+│   ├── test_services.py       # Тесты бизнес-логики
+│   └── .coverage              # Файл покрытия тестами
+│
+├── requirements.txt           # Список Python-зависимостей
+└── README.md                  # Документация проекта
 ```
 
 ## Особенности
