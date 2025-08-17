@@ -465,26 +465,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    let lastScrollTop = 0;
-    const header = document.querySelector('.header');
-    
     window.addEventListener('scroll', function() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        
-        if (scrollTop > lastScrollTop && scrollTop > 100) {
-            header.style.transform = 'translateY(-100%)';
-        } else {
-            header.style.transform = 'translateY(0)';
-        }
-        
-        lastScrollTop = scrollTop;
-        
         debouncedDepthUpdate();
     });
     
     updateDepthEffect();
-    
-    header.style.transition = 'transform 0.3s ease-in-out';
 });
 
 function debounce(func, wait) {
