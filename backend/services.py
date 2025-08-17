@@ -7,8 +7,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import List, Dict, Any, Optional
 import json
-from backend.schemas import Lead, LeadCreate
-from backend.config import config, logging
+from .schemas import Lead, LeadCreate
+from .config import config, logging
 from fastapi import HTTPException, status
 
 class ILeadRepository(ABC):

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
-from backend.schemas import LeadCreate, Lead
-from backend.services import LeadService
+from .schemas import LeadCreate, Lead
+from .services import LeadService
 from typing import List, Dict
 from datetime import datetime
-from backend.config import logging
+from .config import logging
 from fastapi import status
 
 router: APIRouter = APIRouter()

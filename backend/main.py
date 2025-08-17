@@ -4,9 +4,18 @@ import uvicorn
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from backend.schemas import LeadCreate, Lead
-from backend.services import LeadService
-from backend.config import config, logging
+try:
+    from .schemas import LeadCreate, Lead
+    from .services import LeadService
+    from .config import config, logging
+except ImportError:
+    # Fallback for direct script execution
+    import sys
+    from pathlib import Path
+    sys.path.append(str(Path(__file__).parent.parent))
+    from backend.schemas import LeadCreate, Lead
+    from backend.services import LeadService
+    from backend.config import config, logging
 import aiofiles
 import json
 from contextlib import asynccontextmanager
@@ -62,7 +71,7 @@ if __name__ == "__main__":
     port: int = int(os.environ.get('PORT', '8000'))
     debug: bool = os.environ.get('DEBUG', 'False').lower() == 'true'
     uvicorn.run(
-        "backend.main:app",
+        app,
         port=port,
         reload=debug,
         log_level="debug" if debug else "info"
