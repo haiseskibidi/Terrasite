@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terrasite — Цифровые решения для бизнеса</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/static/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body id="top">
     <header class="header">
         <div class="container">
             <a class="logo" href="#top">
-                <img src="images/logo.svg" alt="Terrasite" aria-label="Terrasite" />
+                <img src="/static/images/logo.svg" alt="Terrasite" aria-label="Terrasite" />
             </a>
             <nav class="nav">
                 <a href="#services">Услуги</a>
@@ -119,10 +119,15 @@
                             
                             <textarea 
                                 name="description" 
-                                placeholder="Кратко опишите свой проект"
+                                placeholder="Опишите свой проект (минимум 50 символов)"
                                 rows="6"
                                 required
+                                maxlength="2000"
+                                oninput="updateCharCount()"
                             ></textarea>
+                            <div class="char-counter">
+                                <span id="char-count">0</span> / 2000 символов (минимум 50)
+                            </div>
 
                             <div class="step-navigation">
                                 <button type="button" class="back-button" onclick="prevStep()">← Назад</button>
@@ -241,7 +246,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-left">
-                    <div class="logo"><img src="images/logo.svg" alt="Terrasite" /></div>
+                    <div class="logo"><img src="/static/images/logo.svg" alt="Terrasite" /></div>
                     <p>Создаем цифровые решения для бизнеса</p>
                 </div>
                 <div class="footer-right">
@@ -253,6 +258,6 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="/static/script.js"></script>
 </body>
 </html>

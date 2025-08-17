@@ -76,10 +76,22 @@ function validateDescription() {
         showError('Описание проекта обязательно для заполнения');
         return false;
     }
-    if (description.length < 10) {
-        showError('Описание должно содержать минимум 10 символов');
+    
+    if (description.length < 50) {
+        showError('Описание должно содержать минимум 50 символов для лучшего понимания проекта');
         return false;
     }
+    
+    if (description.length > 2000) {
+        showError('Описание слишком длинное (максимум 2000 символов)');
+        return false;
+    }
+    
+    if (/^(.)\1{20,}$/.test(description) || description.split(' ').length < 8) {
+        showError('Пожалуйста, опишите проект более подробно (минимум 8 слов)');
+        return false;
+    }
+    
     return true;
 }
 
@@ -101,6 +113,21 @@ function validateContacts() {
         return false;
     }
     
+    if (name.length < 2) {
+        showError('Имя должно содержать минимум 2 символа');
+        return false;
+    }
+    
+    if (name.length > 50) {
+        showError('Имя слишком длинное (максимум 50 символов)');
+        return false;
+    }
+    
+    if (!/^[а-яёА-ЯЁa-zA-Z\s\-]+$/.test(name)) {
+        showError('Имя может содержать только буквы, пробелы и дефисы');
+        return false;
+    }
+    
     if (!selectedMethod) {
         showError('Выберите способ связи');
         return false;
@@ -113,12 +140,20 @@ function validateContacts() {
                 showError('Введите номер WhatsApp');
                 return false;
             }
+            if (!/^(\+7|8)[\s\-]?\d{3}[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/.test(whatsapp.replace(/[\s\-()]/g, ''))) {
+                showError('Введите корректный номер телефона (например: +7 999 123-45-67)');
+                return false;
+            }
             break;
             
         case 'telegram':
             const telegram = document.querySelector('input[name="telegram"]').value.trim();
             if (telegram.length === 0) {
                 showError('Введите Telegram username');
+                return false;
+            }
+            if (!/^@[a-zA-Z0-9_]{5,32}$/.test(telegram)) {
+                showError('Введите корректный Telegram username (например: @username)');
                 return false;
             }
             break;
@@ -130,8 +165,16 @@ function validateContacts() {
                 showError('Введите номер телефона');
                 return false;
             }
+            if (!/^(\+7|8)[\s\-]?\d{3}[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/.test(phoneNumber.replace(/[\s\-()]/g, ''))) {
+                showError('Введите корректный номер телефона (например: +7 999 123-45-67)');
+                return false;
+            }
             if (callTime.length === 0) {
                 showError('Укажите удобное время для звонка');
+                return false;
+            }
+            if (callTime.length < 5) {
+                showError('Укажите время более подробно (например: 10:00-18:00 или утром)');
                 return false;
             }
             break;
@@ -334,6 +377,8 @@ function resetFormFields() {
         field.required = false;
     });
     
+    updateCharCount();
+    
     currentStep = 1;
     document.querySelectorAll('.form-step').forEach(step => step.classList.remove('active'));
     document.querySelector('[data-step="1"]').classList.add('active');
@@ -355,6 +400,24 @@ function updateDepthEffect() {
 
 const debouncedDepthUpdate = debounce(updateDepthEffect, 16);
 
+function updateCharCount() {
+    const textarea = document.querySelector('textarea[name="description"]');
+    const counter = document.getElementById('char-count');
+    const counterDiv = document.querySelector('.char-counter');
+    
+    if (textarea && counter) {
+        const currentLength = textarea.value.length;
+        counter.textContent = currentLength;
+        
+        counterDiv.classList.remove('warning', 'success');
+        if (currentLength < 50) {
+            counterDiv.classList.add('warning');
+        } else if (currentLength >= 50) {
+            counterDiv.classList.add('success');
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('contactForm');
     if (form) {
@@ -365,6 +428,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    updateCharCount();
     
     const serviceCards = document.querySelectorAll('.service-card');
     serviceCards.forEach(card => {

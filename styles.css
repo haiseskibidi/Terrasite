@@ -579,7 +579,22 @@ input::-moz-placeholder, textarea::-moz-placeholder {
 textarea {
     resize: vertical;
     min-height: 120px;
-    margin-bottom: 40px;
+    margin-bottom: 10px;
+}
+
+.char-counter {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 30px;
+    text-align: right;
+}
+
+.char-counter.warning {
+    color: #ff6b6b;
+}
+
+.char-counter.success {
+    color: #4caf50;
 }
 
 .contact-method-selection {
