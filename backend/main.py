@@ -18,7 +18,7 @@ BASE_DIR: Path = Path(__file__).parent
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     (BASE_DIR / "data").mkdir(exist_ok=True)
 
-    leads_file: Path = Path(config.LEADS_FILE)
+    leads_file: Path = Path(config.leads_file)
     if not leads_file.exists():
         async with aiofiles.open(leads_file, mode='w', encoding='utf-8') as f:
             await f.write(json.dumps([]))
