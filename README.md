@@ -38,7 +38,7 @@ EMAIL_CONFIG = {
 python app.py
 ```
 
-Сайт будет доступен по адресу: http://localhost:5000
+Сайт будет доступен по адресу: http://localhost:8000
 
 ## Использование
 

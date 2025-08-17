@@ -7,10 +7,10 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body id="top">
     <header class="header">
         <div class="container">
-            <a class="logo" href="#">
+            <a class="logo" href="#top">
                 <img src="images/logo.svg" alt="Terrasite" aria-label="Terrasite" />
             </a>
             <nav class="nav">
@@ -27,7 +27,14 @@
                 <div class="hero-content">
                     <h2 class="hero-title">Создаем цифровые решения<br>для вашего бизнеса</h2>
                     <p class="hero-subtitle">Современные решения для привлечения клиентов и автоматизации процессов</p>
-                    <a href="#contact" class="cta-button">Оставить заявку</a>
+                    <div class="cta-buttons">
+                        <a href="#contact" class="cta-button">Оставить заявку</a>
+                        <a href="https://wa.me/79149778395?text=Здравствуйте!%20Интересует%20создание%20сайта" 
+                           class="whatsapp-button" target="_blank" rel="noopener">
+                            <span class="whatsapp-icon">📱</span>
+                            Написать в WhatsApp
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -157,12 +164,47 @@
                         </div>
 
                         <div class="form-step" data-step="4">
-                            <h3>Давайте познакомимся?</h3>
-                            <p class="step-subtitle">Оба поля обязательны для заполнения</p>
+                            <h3>Как с вами связаться?</h3>
+                            <p class="step-subtitle">Выберите удобный способ связи</p>
                             
+                            <div class="contact-method-selection">
+                                <label class="contact-method-option">
+                                    <input type="radio" name="contact_method" value="whatsapp" onchange="updateContactField()">
+                                    <span class="option-content">
+                                        <span class="contact-icon">📱</span>
+                                        WhatsApp
+                                    </span>
+                                </label>
+                                <label class="contact-method-option">
+                                    <input type="radio" name="contact_method" value="telegram" onchange="updateContactField()">
+                                    <span class="option-content">
+                                        <span class="contact-icon">💬</span>
+                                        Telegram
+                                    </span>
+                                </label>
+                                <label class="contact-method-option">
+                                    <input type="radio" name="contact_method" value="phone" onchange="updateContactField()">
+                                    <span class="option-content">
+                                        <span class="contact-icon">📞</span>
+                                        Звонок
+                                    </span>
+                                </label>
+                                <label class="contact-method-option">
+                                    <input type="radio" name="contact_method" value="email" onchange="updateContactField()">
+                                    <span class="option-content">
+                                        <span class="contact-icon">📧</span>
+                                        Email
+                                    </span>
+                                </label>
+                            </div>
+
                             <div class="contact-fields">
                                 <input type="text" name="name" placeholder="Ваше имя" required>
-                                <input type="email" name="email" placeholder="Ваш email" required>
+                                <input type="tel" name="phone" placeholder="Ваш номер WhatsApp" id="whatsapp-field" style="display: none;">
+                                <input type="text" name="telegram" placeholder="Telegram (@username)" id="telegram-field" style="display: none;">
+                                <input type="tel" name="phone_number" placeholder="Ваш номер телефона" id="phone-number-field" style="display: none;">
+                                <input type="text" name="call_time" placeholder="Время для звонка (МСК)" id="call-time-field" style="display: none;">
+                                <input type="email" name="email" placeholder="Ваш email" id="email-field" style="display: none;">
                             </div>
 
                             <div class="step-navigation">
@@ -183,6 +225,17 @@
             </div>
         </section>
     </main>
+
+    <div id="successNotification" class="success-notification">
+        <div class="notification-content">
+            <div class="notification-icon">✓</div>
+            <div class="notification-text">
+                <h4>Заявка отправлена!</h4>
+                <p>Мы свяжемся с вами в течение 24 часов</p>
+            </div>
+            <button class="notification-close" onclick="hideSuccessNotification()">×</button>
+        </div>
+    </div>
 
     <footer class="footer">
         <div class="container">

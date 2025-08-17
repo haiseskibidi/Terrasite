@@ -1,4 +1,3 @@
-// Переменные состояния формы
 let currentStep = 1;
 const totalSteps = 4;
 let formData = {
@@ -6,10 +5,14 @@ let formData = {
     description: '',
     budget: '',
     name: '',
+    contact_method: '',
+    phone: '',
+    telegram: '',
+    phone_number: '',
+    call_time: '',
     email: ''
 };
 
-// Функции навигации по шагам
 function nextStep() {
     if (validateCurrentStep()) {
         if (currentStep < totalSteps) {
@@ -43,7 +46,6 @@ function showStep(step) {
     }
 }
 
-// Валидация шагов
 function validateCurrentStep() {
     switch (currentStep) {
         case 1:
@@ -92,21 +94,59 @@ function validateBudget() {
 
 function validateContacts() {
     const name = document.querySelector('input[name="name"]').value.trim();
-    const email = document.querySelector('input[name="email"]').value.trim();
+    const selectedMethod = document.querySelector('input[name="contact_method"]:checked');
     
     if (name.length === 0) {
         showError('Имя обязательно для заполнения');
         return false;
     }
     
-    if (email.length === 0) {
-        showError('Email обязателен для заполнения');
+    if (!selectedMethod) {
+        showError('Выберите способ связи');
         return false;
     }
     
-    if (!isValidEmail(email)) {
-        showError('Введите корректный email адрес');
-        return false;
+    switch(selectedMethod.value) {
+        case 'whatsapp':
+            const whatsapp = document.querySelector('input[name="phone"]').value.trim();
+            if (whatsapp.length === 0) {
+                showError('Введите номер WhatsApp');
+                return false;
+            }
+            break;
+            
+        case 'telegram':
+            const telegram = document.querySelector('input[name="telegram"]').value.trim();
+            if (telegram.length === 0) {
+                showError('Введите Telegram username');
+                return false;
+            }
+            break;
+            
+        case 'phone':
+            const phoneNumber = document.querySelector('input[name="phone_number"]').value.trim();
+            const callTime = document.querySelector('input[name="call_time"]').value.trim();
+            if (phoneNumber.length === 0) {
+                showError('Введите номер телефона');
+                return false;
+            }
+            if (callTime.length === 0) {
+                showError('Укажите удобное время для звонка');
+                return false;
+            }
+            break;
+            
+        case 'email':
+            const email = document.querySelector('input[name="email"]').value.trim();
+            if (email.length === 0) {
+                showError('Введите email адрес');
+                return false;
+            }
+            if (!isValidEmail(email)) {
+                showError('Введите корректный email адрес');
+                return false;
+            }
+            break;
     }
     
     return true;
@@ -117,15 +157,12 @@ function isValidEmail(email) {
     return emailRegex.test(email);
 }
 
-// Функция показа ошибок
 function showError(message) {
-    // Удаляем предыдущие ошибки
     const existingError = document.querySelector('.error-message');
     if (existingError) {
         existingError.remove();
     }
     
-    // Создаем новое сообщение об ошибке
     const errorElement = document.createElement('div');
     errorElement.className = 'error-message';
     errorElement.style.cssText = `
@@ -139,7 +176,6 @@ function showError(message) {
     `;
     errorElement.textContent = message;
     
-    // Вставляем перед кнопками навигации
     const currentStepElement = document.querySelector('.form-step.active');
     const navigationElement = currentStepElement.querySelector('.step-navigation, .next-button');
     if (navigationElement) {
@@ -148,7 +184,6 @@ function showError(message) {
         currentStepElement.appendChild(errorElement);
     }
     
-    // Удаляем ошибку через 5 секунд
     setTimeout(() => {
         if (errorElement.parentNode) {
             errorElement.remove();
@@ -156,34 +191,69 @@ function showError(message) {
     }, 5000);
 }
 
-// Обновление данных формы
 function updateFormData() {
-    // Услуги
     const checkedServices = document.querySelectorAll('input[name="services"]:checked');
     formData.services = Array.from(checkedServices).map(input => input.value);
     
-    // Описание
     const description = document.querySelector('textarea[name="description"]');
     if (description) {
         formData.description = description.value.trim();
     }
     
-    // Бюджет
     const checkedBudget = document.querySelector('input[name="budget"]:checked');
     if (checkedBudget) {
         formData.budget = checkedBudget.value;
     }
     
-    // Контакты
     const name = document.querySelector('input[name="name"]');
-    const email = document.querySelector('input[name="email"]');
+    const contactMethod = document.querySelector('input[name="contact_method"]:checked');
+    
     if (name) formData.name = name.value.trim();
-    if (email) formData.email = email.value.trim();
+    
+    if (contactMethod) {
+        formData.contact_method = contactMethod.value;
+        
+        switch(contactMethod.value) {
+            case 'whatsapp':
+                const whatsapp = document.querySelector('input[name="phone"]');
+                if (whatsapp) formData.phone = whatsapp.value.trim();
+                break;
+                
+            case 'telegram':
+                const telegram = document.querySelector('input[name="telegram"]');
+                if (telegram) formData.telegram = telegram.value.trim();
+                break;
+                
+            case 'phone':
+                const phoneNumber = document.querySelector('input[name="phone_number"]');
+                const callTime = document.querySelector('input[name="call_time"]');
+                if (phoneNumber) formData.phone_number = phoneNumber.value.trim();
+                if (callTime) formData.call_time = callTime.value.trim();
+                break;
+                
+            case 'email':
+                const email = document.querySelector('input[name="email"]');
+                if (email) formData.email = email.value.trim();
+                break;
+        }
+    }
 }
 
-// Отправка формы
+let isSubmitting = false;
+
 async function submitForm() {
+    if (isSubmitting) {
+        showError('Заявка уже отправляется, подождите...');
+        return;
+    }
+    
     updateFormData();
+    
+    const submitButton = document.querySelector('.submit-button');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Отправляется...';
+    isSubmitting = true;
     
     try {
         const response = await fetch('/submit-form', {
@@ -195,27 +265,80 @@ async function submitForm() {
         });
         
         if (response.ok) {
-            showStep('success');
-            // Сброс формы
-            formData = {
-                services: [],
-                description: '',
-                budget: '',
-                name: '',
-                email: ''
-            };
+            showSuccessNotification();
+            
+            setTimeout(() => {
+                formData = {
+                    services: [],
+                    description: '',
+                    budget: '',
+                    name: '',
+                    contact_method: '',
+                    phone: '',
+                    telegram: '',
+                    phone_number: '',
+                    call_time: '',
+                    email: ''
+                };
+                resetFormFields();
+            }, 1000);
         } else {
-            throw new Error('Ошибка при отправке формы');
+            let errorMessage = 'Ошибка при отправке формы';
+            try {
+                const errorData = await response.json();
+                if (errorData && errorData.error) {
+                    errorMessage = errorData.error;
+                }
+            } catch (e) {
+            }
+            throw new Error(errorMessage);
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        showError('Произошла ошибка при отправке формы. Попробуйте еще раз.');
+        showError(error.message);
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+        isSubmitting = false;
     }
 }
 
-// Обработчики событий
+function resetFormFields() {
+    document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea').forEach(input => {
+        input.value = '';
+    });
+    
+    document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+        input.checked = false;
+    });
+    
+    document.querySelectorAll('#whatsapp-field, #telegram-field, #phone-number-field, #call-time-field, #email-field').forEach(field => {
+        field.style.display = 'none';
+        field.required = false;
+    });
+    
+    currentStep = 1;
+    document.querySelectorAll('.form-step').forEach(step => step.classList.remove('active'));
+    document.querySelector('[data-step="1"]').classList.add('active');
+}
+
+function updateDepthEffect() {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollPercent = Math.min(scrollTop / docHeight, 1);
+    
+    const vignetteStart = 30 - (scrollPercent * 20);
+    const vignetteMidOpacity = 0.05 + (scrollPercent * 0.15);
+    const vignetteEndOpacity = 0.15 + (scrollPercent * 0.35);
+    
+    document.body.style.setProperty('--vignette-start', `${vignetteStart}%`);
+    document.body.style.setProperty('--vignette-mid-opacity', vignetteMidOpacity);
+    document.body.style.setProperty('--vignette-end-opacity', vignetteEndOpacity);
+}
+
+const debouncedDepthUpdate = debounce(updateDepthEffect, 16);
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Обработка отправки формы
     const form = document.getElementById('contactForm');
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -226,23 +349,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Обработка кликов по карточкам услуг в главной секции
     const serviceCards = document.querySelectorAll('.service-card');
     serviceCards.forEach(card => {
         card.addEventListener('click', function() {
-            // Убираем активный класс у всех карточек
             serviceCards.forEach(c => c.classList.remove('active'));
-            // Добавляем активный класс к выбранной
             this.classList.add('active');
         });
     });
     
-    // Плавная прокрутка для якорных ссылок
     const anchorLinks = document.querySelectorAll('a[href^="#"]');
     anchorLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const targetId = this.getAttribute('href').substring(1);
+            
+            if (targetId === 'top') {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+                return;
+            }
+            
             const targetElement = document.getElementById(targetId);
             if (targetElement) {
                 const headerHeight = document.querySelector('.header').offsetHeight;
@@ -255,7 +383,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Обработка скролла для фиксированной шапки
     let lastScrollTop = 0;
     const header = document.querySelector('.header');
     
@@ -263,21 +390,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         
         if (scrollTop > lastScrollTop && scrollTop > 100) {
-            // Скролл вниз - скрываем шапку
             header.style.transform = 'translateY(-100%)';
         } else {
-            // Скролл вверх - показываем шапку
             header.style.transform = 'translateY(0)';
         }
         
         lastScrollTop = scrollTop;
+        
+        debouncedDepthUpdate();
     });
     
-    // Добавляем transition для плавного скрытия/показа шапки
+    updateDepthEffect();
+    
     header.style.transition = 'transform 0.3s ease-in-out';
 });
 
-// Дебаунс функция для оптимизации обработчиков
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -290,7 +417,6 @@ function debounce(func, wait) {
     };
 }
 
-// Функция для анимации появления элементов при скролле
 function animateOnScroll() {
     const elements = document.querySelectorAll('.service-card, .benefit');
     
@@ -314,5 +440,64 @@ function animateOnScroll() {
     });
 }
 
-// Запускаем анимацию после загрузки DOM
+function updateContactField() {
+    const selectedMethod = document.querySelector('input[name="contact_method"]:checked');
+    const whatsappField = document.getElementById('whatsapp-field');
+    const telegramField = document.getElementById('telegram-field');
+    const phoneNumberField = document.getElementById('phone-number-field');
+    const callTimeField = document.getElementById('call-time-field');
+    const emailField = document.getElementById('email-field');
+    
+    if (!selectedMethod) return;
+    
+    [whatsappField, telegramField, phoneNumberField, callTimeField, emailField].forEach(field => {
+        field.style.display = 'none';
+        field.required = false;
+    });
+    
+    switch(selectedMethod.value) {
+        case 'whatsapp':
+            whatsappField.style.display = 'block';
+            whatsappField.required = true;
+            break;
+        case 'telegram':
+            telegramField.style.display = 'block';
+            telegramField.required = true;
+            break;
+        case 'phone':
+            phoneNumberField.style.display = 'block';
+            callTimeField.style.display = 'block';
+            phoneNumberField.required = true;
+            callTimeField.required = true;
+            break;
+        case 'email':
+            emailField.style.display = 'block';
+            emailField.required = true;
+            break;
+    }
+}
+
+function showSuccessNotification() {
+    const notification = document.getElementById('successNotification');
+    notification.classList.add('show');
+    
+    setTimeout(() => {
+        hideSuccessNotification();
+    }, 5000);
+}
+
+function hideSuccessNotification() {
+    const notification = document.getElementById('successNotification');
+    notification.classList.remove('show');
+}
+
+document.addEventListener('click', function(e) {
+    const notification = document.getElementById('successNotification');
+    if (notification && notification.classList.contains('show')) {
+        if (!notification.contains(e.target)) {
+            hideSuccessNotification();
+        }
+    }
+});
+
 document.addEventListener('DOMContentLoaded', animateOnScroll);

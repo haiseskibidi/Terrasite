@@ -24,28 +24,75 @@ EMAIL_CONFIG = {
     'smtp_host': 'smtp.yandex.ru',
     'smtp_port': 465,
     'smtp_user': 'team.terrasite@yandex.ru',
-    'smtp_password': 'lncsiaezbmfjaltp',  # Пароль приложения
+    'smtp_password': 'lncsiaezbmfjaltp',
     'from_email': 'team.terrasite@yandex.ru',
     'to_email': 'team.terrasite@yandex.ru'
 }
 
 LEADS_FILE = 'leads.json'
 
+def is_duplicate_submission(data, contact_method):
+    try:
+        if not os.path.exists(LEADS_FILE):
+            return False
+            
+        with open(LEADS_FILE, 'r', encoding='utf-8') as f:
+            leads = json.load(f)
+        
+        contact_value = ""
+        if contact_method == 'whatsapp':
+            contact_value = data.get('phone', '')
+        elif contact_method == 'telegram':
+            contact_value = data.get('telegram', '')
+        elif contact_method == 'phone':
+            contact_value = data.get('phone_number', '')
+        elif contact_method == 'email':
+            contact_value = data.get('email', '')
+        
+        if not contact_value:
+            return False
+            
+        current_time = datetime.now()
+        for lead in leads:
+            try:
+                lead_time = datetime.fromisoformat(lead.get('timestamp', ''))
+                time_diff = (current_time - lead_time).total_seconds()
+                
+                if time_diff < 300:
+                    lead_contact_method = lead.get('contact_method', '')
+                    if lead_contact_method == contact_method:
+                        lead_contact_value = ""
+                        if contact_method == 'whatsapp':
+                            lead_contact_value = lead.get('phone', '')
+                        elif contact_method == 'telegram':
+                            lead_contact_value = lead.get('telegram', '')
+                        elif contact_method == 'phone':
+                            lead_contact_value = lead.get('phone_number', '')
+                        elif contact_method == 'email':
+                            lead_contact_value = lead.get('email', '')
+                        
+                        if lead_contact_value.lower().strip() == contact_value.lower().strip():
+                            return True
+            except (ValueError, TypeError):
+                continue
+                
+        return False
+    except Exception as e:
+        logging.error(f"Ошибка проверки дубликатов: {e}")
+        return False
+
 def save_lead(lead_data):
     try:
-        # Читаем существующие заявки
         if os.path.exists(LEADS_FILE):
             with open(LEADS_FILE, 'r', encoding='utf-8') as f:
                 leads = json.load(f)
         else:
             leads = []
         
-        # Добавляем новую заявку
         lead_data['timestamp'] = datetime.now().isoformat()
         lead_data['id'] = len(leads) + 1
         leads.append(lead_data)
         
-        # Сохраняем обратно в файл
         with open(LEADS_FILE, 'w', encoding='utf-8') as f:
             json.dump(leads, f, ensure_ascii=False, indent=2)
         
@@ -67,6 +114,28 @@ def send_notification_email(lead_data):
         }
         budget_text = budget_map.get(lead_data.get('budget', ''), lead_data.get('budget', ''))
         
+        contact_method = lead_data.get('contact_method', '')
+        
+        if contact_method == 'whatsapp':
+            contact_value = lead_data.get('phone', '')
+        elif contact_method == 'telegram':
+            contact_value = lead_data.get('telegram', '')
+        elif contact_method == 'phone':
+            phone_number = lead_data.get('phone_number', '')
+            call_time = lead_data.get('call_time', '')
+            contact_value = f"{phone_number}, время: {call_time}"
+        elif contact_method == 'email':
+            contact_value = lead_data.get('email', '')
+        else:
+            contact_value = ''
+        
+        contact_method_text = {
+            'whatsapp': 'WhatsApp',
+            'telegram': 'Telegram', 
+            'phone': 'Звонок',
+            'email': 'Email'
+        }.get(contact_method, contact_method)
+        
         subject = f"Новая заявка с сайта Terrasite от {lead_data.get('name', '')}"
         
         body = f"""
@@ -74,7 +143,8 @@ def send_notification_email(lead_data):
 
 Контактная информация:
 Имя: {lead_data.get('name', '')}
-Email: {lead_data.get('email', '')}
+Способ связи: {contact_method_text}
+Контакт: {contact_value}
 
 Детали проекта:
 Услуги: {services_text}
@@ -117,14 +187,47 @@ def static_files(filename):
 def submit_form():
     try:
         data = request.get_json()
+        logging.info(f"Получены данные формы: {data}")
         
-        required_fields = ['name', 'email', 'services', 'description', 'budget']
+        required_fields = ['name', 'services', 'description', 'budget', 'contact_method']
         for field in required_fields:
             if field not in data or not data[field]:
                 return jsonify({
                     'success': False,
                     'error': f'Поле {field} обязательно для заполнения'
                 }), 400
+        
+        contact_method = data.get('contact_method')
+        if contact_method == 'whatsapp':
+            if not data.get('phone'):
+                return jsonify({
+                    'success': False,
+                    'error': 'Введите номер WhatsApp'
+                }), 400
+        elif contact_method == 'telegram':
+            if not data.get('telegram'):
+                return jsonify({
+                    'success': False,
+                    'error': 'Введите Telegram username'
+                }), 400
+        elif contact_method == 'phone':
+            if not data.get('phone_number') or not data.get('call_time'):
+                return jsonify({
+                    'success': False,
+                    'error': 'Введите номер телефона и время для звонка'
+                }), 400
+        elif contact_method == 'email':
+            if not data.get('email'):
+                return jsonify({
+                    'success': False,
+                    'error': 'Введите email адрес'
+                }), 400
+        
+        if is_duplicate_submission(data, contact_method):
+            return jsonify({
+                'success': False,
+                'error': 'Заявка с такими контактными данными уже была отправлена недавно'
+            }), 400
         
         if not isinstance(data['services'], list) or len(data['services']) == 0:
             return jsonify({
@@ -146,7 +249,17 @@ def submit_form():
         
         send_notification_email(data)
         
-        logging.info(f"Новая заявка обработана: {data['name']} ({data['email']})")
+        contact_info = ""
+        if contact_method == 'whatsapp':
+            contact_info = f"WhatsApp: {data.get('phone', '')}"
+        elif contact_method == 'telegram':
+            contact_info = f"Telegram: {data.get('telegram', '')}"
+        elif contact_method == 'phone':
+            contact_info = f"Звонок: {data.get('phone_number', '')} в {data.get('call_time', '')}"
+        elif contact_method == 'email':
+            contact_info = f"Email: {data.get('email', '')}"
+        
+        logging.info(f"Новая заявка обработана: {data['name']} ({contact_info})")
         
         return jsonify({
             'success': True,
@@ -185,7 +298,7 @@ if __name__ == '__main__':
         with open(LEADS_FILE, 'w', encoding='utf-8') as f:
             json.dump([], f)
     
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 8000))
     debug = os.environ.get('DEBUG', 'False').lower() == 'true'
     
     app.run(
